@@ -1,0 +1,51 @@
+name: boolean_reservoir
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  # Python
+  - python=3.12
+
+  # Core compute
+  - numpy
+  - scipy
+  - pandas
+  - pyarrow
+  - pydantic
+
+  # ML / stats
+  - scikit-learn
+  - statsmodels
+  - sympy
+
+  # Graph / geometry
+  - networkx
+  - shapely
+  - graphviz
+  - python-graphviz
+
+  # Visualisation / dashboard
+  - matplotlib
+  - matplotlib-label-lines
+  - seaborn
+  - plotly
+  - python-kaleido
+  - dash
+  - dash-ag-grid
+
+  # Julia integration (conda-forge names)
+  - pyjuliacall
+  - pyjuliapkg
+
+  # System utilities
+  - psutil
+  - gunicorn
+  - tqdm
+  - threadpoolctl
+  - pyyaml
+  - orjson
+  - requests
+  - pytest
+  - py-cpuinfo
+
+  - pip

@@ -1,0 +1,97 @@
+# furu final run: every number in the paper comes from this grid. Its choices (KQ/GR setting, best designs, each
+# design's own best k for the self-loop comparison) were made on the pilot (the paper's selection run: the same grid,
+# grid_search/design_choices.yaml, 12 other reservoirs per design) and are scored here on fresh reservoirs. One
+# temporal input stream (c = 1) read by 8 delayed targets (density/parity x window {3, 5} x delay {5, 10}) on both
+# readouts from one reservoir run, plus KQ/GR under all 12 settings on that same reservoir. Redundancy r is the drive.
+# Every sample starts with 10 random washout bits, so windows are not read off the shared reset state. Seeds follow
+# the reservoir content (seeding: content), so wiring.yaml rebuilds the same reservoirs.
+# Run: project.boolean_reservoir.test.furu.generate_final
+logging:
+  out_path: out/furu/grid_search/final/design
+  save_keys: null
+  grid_search:
+    seed: 2027
+    seeding: content
+    n_samples: 20
+    run: [train, kqgr]
+model:
+  wiring:
+  - type: pattern
+    source: B
+    target: I
+    pattern: identity
+  - type: pattern
+    source: I
+    target: R
+    pattern: identity          # one-to-one: each input node feeds its own reservoir node, no clash
+  - type: gnm
+    source: R
+    target: R
+    k_min: 0
+    k_max: 25
+    k_avg: R_k_avg
+    self_loops: R_self_loops
+    mode: R_mode
+  input_layer:
+    perturbation: [override, xor]
+    encoding: base2
+    features: 1
+    resolution: 1
+    redundancy: [1, 4, 16, 64, 256, 512]
+    ticks: ['1', '2']
+  output_layer:
+    n_nodes: 1
+    heads: [time-series, classification]   # both readouts fitted on one reservoir run
+  reservoir_layer:
+    init: [zeros, random, random-warmup]
+    n_nodes: 512
+    reset: true
+  training:
+    epochs: 1
+    evaluation: dev
+    optim:
+      name: bernoulli
+      params:
+        alpha: 1.0e-6          # Bernoulli GLM (logit link), Newton-IRLS: smallest well-posed alpha
+  variables:
+    R_k_avg: [1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5, 2.75, 3.0, 3.5, 4.0, 5.0, 6.0, 7.0, 8.0]   # from 1: below it self_loops 1 is infeasible
+    R_self_loops: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 1]
+    R_mode: [heterogeneous]    # homogeneous needs a whole-number k: wiring.yaml compares the two
+dataset:
+  name: temporal
+  task: density                # y: the first head; every head is logged in logging.targets
+  window: 3
+  delay: 5
+  heads:
+  - {task: density, window: 3, delay: 5}
+  - {task: density, window: 3, delay: 10}
+  - {task: density, window: 5, delay: 5}
+  - {task: density, window: 5, delay: 10}
+  - {task: parity, window: 3, delay: 5}
+  - {task: parity, window: 3, delay: 10}
+  - {task: parity, window: 5, delay: 5}
+  - {task: parity, window: 5, delay: 10}
+  dimensions: 1
+  bits: 15                     # scored bits, after the washout
+  washout: 10                  # random lead-in, never scored; skipped by the time-series readout (KQ/GR too)
+  split:
+    train: 0.5
+    dev: 0.3
+    test: 0.2
+  samples: 32768
+  sampling_mode: exhaustive    # every scored 15-bit stream once: dev and test streams are never seen in training
+  shuffle: true
+  seed: 0
+# One universe, 'train' (the name every training run uses): the readouts are fitted (run: train) and the probe
+# measured (run: kqgr) on the same reservoirs. Its dataset adds the probe settings to the task dataset above.
+multiverse_overrides:
+  train:
+    dataset:
+      tau: 5                   # the paper's probe setting, chosen on the pilot: last + steal, tau 5
+      tau_mode: steal
+      evaluation: last
+      tau_axis: steps
+      sweep:                   # all 12 settings on the same reservoir (measurements, not axes)
+        tau: [3, 5]
+        tau_mode: [steal, augment]
+        evaluation: [first, last, random]

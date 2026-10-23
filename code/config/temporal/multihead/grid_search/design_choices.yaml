@@ -1,0 +1,92 @@
+# furu pilot: the design-choice grid on which the final run's choices were made. One input stream (c = 1)
+# read by 12 task heads at once (dataset.heads: density/parity x window {3, 5} x delay {0, 5, 10}).
+# Encoding is fixed (base2 == hamming_weight for a 1-bit input) and wiring is heterogeneous only (an exploratory
+# homogeneous check found no difference; final/wiring.yaml tests it again). Redundancy r is the drive: exploratory
+# runs found it sets the best k (r1 -> k 6-8 ... r >= 64 -> k 1-2), so k is finest around 1-3. Every sample starts
+# with 10 random washout bits: without them windows near the stream start are read off the shared reset state
+# (primacy), and delay would measure position in the stream instead of memory.
+# Run: project.boolean_reservoir.test.furu.generate_design_choices
+logging:
+  out_path: out/furu/grid_search/design_choices
+  save_keys: null
+  grid_search:
+    n_samples: 1
+    run: [train, kqgr]
+model:
+  wiring:
+  - type: pattern
+    source: B
+    target: I
+    pattern: identity
+  - type: pattern
+    source: I
+    target: R
+    pattern: identity          # one-to-one: each input node feeds its own reservoir node, no clash
+  - type: gnm
+    source: R
+    target: R
+    k_min: 0
+    k_avg: R_k_avg
+    k_max: 25
+    self_loops: R_self_loops
+    mode: heterogeneous
+  input_layer:
+    perturbation: [override, xor]
+    encoding: base2
+    features: 1
+    resolution: 1
+    redundancy: [1, 4, 16, 64, 256, 512]
+    ticks: ['1', '2']
+  output_layer:
+    n_nodes: 1
+    heads: [time-series, classification]   # both readouts fitted on one reservoir run
+  reservoir_layer:
+    init: [zeros, random, random-warmup]
+    n_nodes: 512
+    reset: true
+  training:
+    epochs: 1
+    evaluation: dev
+    optim:
+      name: bernoulli
+      params:
+        alpha: 1.0e-6          # Bernoulli GLM (logit link), Newton-IRLS: smallest well-posed alpha
+  variables:
+    R_k_avg: [1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5, 2.75, 3.0, 3.5, 4.0, 5.0, 6.0, 7.0, 8.0]   # from 1: below it self_loops 1 is infeasible
+    R_self_loops: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 1]
+dataset:
+  name: temporal
+  task: density                # y: the first head; every head is logged in logging.targets
+  window: 3
+  delay: 0
+  heads:
+  - {task: density, window: 3, delay: 0}
+  - {task: density, window: 3, delay: 5}
+  - {task: density, window: 3, delay: 10}
+  - {task: density, window: 5, delay: 0}
+  - {task: density, window: 5, delay: 5}
+  - {task: density, window: 5, delay: 10}
+  - {task: parity, window: 3, delay: 0}
+  - {task: parity, window: 3, delay: 5}
+  - {task: parity, window: 3, delay: 10}
+  - {task: parity, window: 5, delay: 0}
+  - {task: parity, window: 5, delay: 5}
+  - {task: parity, window: 5, delay: 10}
+  dimensions: 1
+  bits: 15                     # scored bits, after the washout
+  washout: 10                  # random lead-in, never scored; skipped by the time-series readout (KQ/GR too)
+  split:
+    train: 0.5
+    dev: 0.3
+    test: 0.2
+  samples: 32768
+  sampling_mode: exhaustive    # every scored 15-bit stream once: dev and test streams are never seen in training
+  shuffle: true
+  seed: 0
+multiverse_overrides:
+  train:
+    dataset:
+      tau: [3, 5]
+      tau_mode: [steal, augment]
+      tau_axis: steps
+      evaluation: [first, last, random]

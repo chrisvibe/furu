@@ -1,0 +1,50 @@
+logging:
+  out_path: /out/test/ca/rule150_linear_transducer
+  save_keys:
+  - parameters
+  - w_bi
+  - graph
+  - wiring
+  - lut
+  - init_state
+  history:
+    record: true
+    persist_to_disk: false
+    buffer_size: 256
+model:
+  wiring:
+  - type: pattern
+    source: B
+    target: I
+    pattern: identity
+  - type: pattern
+    source: I
+    target: R
+    pattern: identity
+  - type: gnm
+    source: R
+    target: R
+    k_avg: 3.0
+    k_min: 3
+    k_max: 3
+    self_loops: 0.0
+  input_layer:
+    seed: 0
+    perturbation: override
+    encoding: base2
+    features: 1
+    bits: 1
+    ticks: '1'
+  output_layer:
+    seed: 0
+    n_nodes: 1
+  reservoir_layer:
+    seed: 0
+    init: zeros
+    n_nodes: 64
+    reset: true
+  training:
+    seed: 0
+    batch_size: 1
+    epochs: 1
+    accuracy_threshold: 0.05

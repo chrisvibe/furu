@@ -1,0 +1,99 @@
+# Pilot for the main grid in ../design_choices/
+logging:
+  out_path: out/temporal/density/grid_search/pilot/redundancy
+  save_keys: null
+  grid_search:
+    n_samples: 10
+    run: [train]
+model:
+  wiring:
+  - type: pattern
+    source: B
+    target: I
+    pattern: identity
+  - type: pattern
+    source: I
+    target: R
+    pattern: identity
+  - type: gnm
+    source: R
+    target: R
+    k_avg: R_k_avg
+    k_min: R_k_min
+    k_max: R_k_max
+    self_loops: R_self_loops
+    mode: R_mode
+  input_layer:
+    perturbation: [override, xor]
+    encoding: base2
+    features: 1
+    resolution: 1
+    redundancy: [1, 2, 3, 5, 7, 10, 15, 20, 30, 50, 100]
+    ticks: '1'
+  output_layer:
+    n_nodes: 1
+    mode: [time-series, classification]
+  reservoir_layer:
+    init: random
+    n_nodes: 512
+    reset: true
+  training:
+    epochs: 1
+    evaluation: dev
+    optim:
+    - name: bernoulli
+      params:
+        alpha: 0.0
+    - name: bernoulli
+      params:
+        alpha: 1.0e-6
+    - name: bernoulli
+      params:
+        alpha: 3.0e-6
+    - name: bernoulli
+      params:
+        alpha: 1.0e-5
+    - name: bernoulli
+      params:
+        alpha: 3.0e-5
+    - name: bernoulli
+      params:
+        alpha: 1.0e-4
+    - name: bernoulli
+      params:
+        alpha: 3.0e-4
+    - name: bernoulli
+      params:
+        alpha: 1.0e-3
+    - name: bernoulli
+      params:
+        alpha: 3.0e-3
+    - name: bernoulli
+      params:
+        alpha: 1.0e-2
+    - name: bernoulli
+      params:
+        alpha: 3.0e-2
+    - name: bernoulli
+      params:
+        alpha: 1.0e-1
+  variables:
+    R_mode: homogeneous
+    R_k_avg: [2, 3, 4]
+    R_k_min: 0
+    R_k_max: 25
+    R_self_loops: 0
+dataset:
+  name: temporal
+  task: density
+  bits: 15
+  window: [3, 5]
+  delay: [6, 11]
+  split:
+    train: 0.5
+    dev: 0.5
+    test: 0
+  samples: 2048
+  sampling_mode: exhaustive
+  shuffle: true
+  seed: 1

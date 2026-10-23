@@ -1,0 +1,68 @@
+logging:
+  out_path: /out/test/ca/gkl_density
+  save_keys:
+  - parameters
+  - w_bi
+  - graph
+  - wiring
+  - lut
+  - init_state
+  history:
+    record: true
+    persist_to_disk: false
+    buffer_size: 256
+model:
+  wiring:
+  - type: pattern
+    source: B
+    target: I
+    pattern: identity
+  - type: pattern
+    source: I
+    target: R
+    pattern: identity
+  - type: gnm
+    source: R
+    target: R
+    k_avg: 5.0
+    k_min: 5
+    k_max: 5
+    self_loops: 0.0
+  input_layer:
+    seed: 0
+    n_nodes: 0                # purely autonomous CA — no input nodes
+    ticks: '1'
+  output_layer:
+    seed: 0
+    n_nodes: 1
+    activation: sigmoid
+    mode: classification
+  reservoir_layer:
+    seed: 0
+    init: zeros
+    n_nodes: 149
+    reset: true
+  training:
+    seed: 0
+    batch_size: 1
+    epochs: 1
+    accuracy_threshold: 0.05
+    evaluation: dev
+    optim:
+      name: bernoulli
+      params:
+        alpha: 1.0e-3
+dataset:
+  name: temporal
+  task: density
+  bits: 149                  # full ring state = one step of 149 bits
+  window: 149                # classify entire bitstream → majority vote = GKL label
+  delay: 0
+  sampling_mode: random
+  samples: 2048
+  shuffle: true
+  seed: 0
+  split:
+    train: 0.8
+    dev: 0.2
+    test: 0

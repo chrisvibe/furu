@@ -1,0 +1,57 @@
+logging:
+  out_path: /tmp/boolean_reservoir/test/boolean_reservoir/networkx_wiring
+model:
+  wiring:
+  - type: pattern
+    source: B
+    target: I
+    pattern: identity
+  - type: pattern
+    source: I
+    target: R
+    pattern: identity
+  - type: networkx
+    source: R
+    target: R
+    graph:
+      name: barabasi_albert_graph
+      params:
+        m: 3
+    directed: true
+    k_max: 8
+  input_layer:
+    perturbation: override
+    encoding: base2
+    features: 1
+    resolution: 1
+    redundancy: 2
+    ticks: '1'
+  output_layer:
+    activation: sigmoid
+    n_nodes: 1
+    mode: classification
+  reservoir_layer:
+    init: zeros
+    n_nodes: 32
+    reset: true
+  training:
+    epochs: 1
+    evaluation: dev
+    optim:
+      name: bernoulli
+      params:
+        alpha: 1.0e-3
+  variables: {}
+dataset:
+  task: density
+  bits: 10
+  window: 3
+  delay: 3
+  split:
+    train: 0.5
+    dev: 0.5
+    test: 0
+  samples: 2048
+  sampling_mode: exhaustive
+  shuffle: true
+  seed: 0

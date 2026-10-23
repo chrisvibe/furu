@@ -1,0 +1,79 @@
+{
+ "results_version": 1,
+ "jobs": {
+  "pi_kqgr": {
+   "reservoir_id": "10ea6d22ccc30e2b",
+   "build": "e472c2971c10e999",
+   "own.accuracy": [
+    0.078,
+    0.0,
+    0.0
+   ],
+   "own.loss": [
+    0.2277,
+    0.4104,
+    0.3419
+   ],
+   "own.kqgr": [
+    14,
+    10
+   ]
+  },
+  "temporal_heads": {
+   "reservoir_id": "71f49ff59118bf00",
+   "build": "23adf5d443e527f8",
+   "time-series.accuracy": [
+    0.6875,
+    0.7264,
+    0.7415
+   ],
+   "time-series.loss": [
+    0.5879,
+    0.5443,
+    0.5613
+   ],
+   "classification.accuracy": [
+    0.5566,
+    0.5179,
+    0.4878
+   ],
+   "classification.loss": [
+    0.6866,
+    0.6953,
+    0.7036
+   ]
+  },
+  "temporal_kqgr": {
+   "reservoir_id": "71f49ff59118bf00",
+   "build": "23adf5d443e527f8",
+   "time-series.accuracy": [
+    0.6875,
+    0.7264,
+    0.7415
+   ],
+   "time-series.loss": [
+    0.5879,
+    0.5443,
+    0.5613
+   ],
+   "time-series.kqgr": [
+    2,
+    2
+   ],
+   "classification.accuracy": [
+    0.5566,
+    0.5179,
+    0.4878
+   ],
+   "classification.loss": [
+    0.6866,
+    0.6953,
+    0.7036
+   ],
+   "classification.kqgr": [
+    2,
+    1
+   ]
+  }
+ }
+}

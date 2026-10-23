@@ -1,0 +1,49 @@
+logging:
+  out_path: /out/test/ca/second_order_rule90
+  save_keys:
+  - parameters
+  - w_bi
+  - graph
+  - wiring
+  - lut
+  - init_state
+  history:
+    record: true
+    persist_to_disk: false
+    buffer_size: 512
+model:
+  wiring:
+  - type: pattern
+    source: B
+    target: I
+    pattern: identity
+  - type: pattern
+    source: I
+    target: R
+    pattern: identity
+  - type: gnm
+    source: R
+    target: R
+    k_avg: 3.0
+    k_min: 3
+    k_max: 3
+    self_loops: 0.0
+  input_layer:
+    seed: 0
+    perturbation: override    # I-node carries u_t each tick (the time-lock key bit)
+    features: 1
+    bits: 1
+    ticks: '1'
+  output_layer:
+    seed: 0
+    n_nodes: 1
+  reservoir_layer:
+    seed: 0
+    init: zeros
+    n_nodes: 64               # 2*N for doubled-state second-order Rule 90 (N=32)
+    reset: true
+  training:
+    seed: 0
+    batch_size: 1
+    epochs: 1
+    accuracy_threshold: 0.05

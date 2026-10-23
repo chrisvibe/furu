@@ -1,0 +1,57 @@
+/* Structure and selectors only — every value is a var(--token).
+ * The token values themselves are generated from dashboards/theme.py and
+ * injected as :root / [data-theme="light"] blocks via index_string(), so there
+ * is exactly one source of truth for colour.
+ *
+ * All five apps construct their Dash() inside the `dashboards` package, so they
+ * all resolve assets_folder to this directory and serve this file at
+ * {url_base_pathname}assets/theme.css.
+ */
+
+/* color-scheme inherits, so putting it on <html> flips number-input spinners,
+ * scrollbars and native pickers everywhere — not just inputs. */
+html {
+    color-scheme: var(--color-scheme);
+}
+
+body.br-body {
+    background: var(--surface);
+    color: var(--text);
+    margin: 0;
+}
+
+/* Dash's dropdown menu is portalled outside the component tree and ships its own
+ * inline colours, so these need !important.  That sets *declaration* priority;
+ * var() still substitutes at computed-value time from whichever :root /
+ * [data-theme] block won, so one rule set serves both themes. */
+.dash-dropdown-wrapper,
+.dash-dropdown-wrapper * {
+    background-color: var(--dd-bg) !important;
+    color: var(--text) !important;
+    border-color: var(--border) !important;
+}
+
+.dash-dropdown-content {
+    background-color: var(--dd-bg) !important;
+    border-color: var(--border) !important;
+    box-shadow: 0 4px 12px var(--dd-shadow) !important;
+}
+
+.dash-dropdown-option {
+    background-color: var(--dd-bg) !important;
+    color: var(--text) !important;
+}
+
+.dash-dropdown-option:hover {
+    background-color: var(--dd-bg-hover) !important;
+    color: var(--accent-text) !important;
+}
+
+.dash-dropdown-option.selected {
+    background-color: var(--dd-bg-sel) !important;
+    color: var(--accent-text) !important;
+}
+
+.dash-dropdown-option.disabled {
+    color: var(--text-dim) !important;
+}

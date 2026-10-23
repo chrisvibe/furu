@@ -1,0 +1,126 @@
+{
+  "x-axis": "R_k_avg",
+  "y-axis": [
+    "T_loss",
+    "T_accuracy"
+  ],
+  "x-jitter-toggle": [
+    "on"
+  ],
+  "x-jitter-min": -0.5,
+  "x-jitter-max": 0.5,
+  "x-bin-width": 1,
+  "y-jitter-toggle": [],
+  "y-jitter-min": -0.5,
+  "y-jitter-max": 0.5,
+  "color-by-factor": [
+    "_selection_"
+  ],
+  "color-by-values": [],
+  "color-scale-picker": "Viridis",
+  "color-scale-reverse": [],
+  "agg-group-by": [],
+  "agg-y-mode": "raw",
+  "filter-expr": "T_accuracy > 0.9",
+  "fields-expr": "T_loss = T_loss**.5 + 1.1",
+  "setting-display-points": 10000,
+  "setting-discrete-threshold": 100,
+  "setting-marker-size": 7,
+  "setting-marker-opacity": 0.7,
+  "color-as-continuous": [],
+  "legend-show-factor-name": [
+    "on"
+  ],
+  "skip-sparse-factors": [
+    "on"
+  ],
+  "overlay-dots-toggle": [
+    "on"
+  ],
+  "overlay-line-toggle": [],
+  "overlay-line-width": 2,
+  "overlay-line-opacity": 1,
+  "overlay-spline-k": 3,
+  "overlay-spline-s": 50,
+  "overlay-per-line-toggle": [],
+  "overlay-spline-ks": [],
+  "overlay-anchor-left": [],
+  "overlay-anchor-right": [],
+  "overlay-y-styles": [
+    {
+      "symbol": "circle",
+      "dash": "solid"
+    },
+    {
+      "symbol": "square",
+      "dash": "dash"
+    }
+  ],
+  "theme-toggle": [],
+  "_extras": {
+    "factor_filters": {
+      "D_mode": [
+        "displacement",
+        "velocity"
+      ],
+      "D_dimensions": [],
+      "L_universe": [
+        "train"
+      ],
+      "L_out_path": [
+        "out/path_integration/2D/grid_search/design_choices/continuous"
+      ],
+      "L_out_name": [],
+      "kqgr_tau": [],
+      "kqgr_evaluation": [],
+      "kqgr_tau_mode": [],
+      "kqgr_tau_axis": [],
+      "O_mode": [
+        "time-series"
+      ],
+      "I_perturbation": [
+        "override"
+      ],
+      "I_redundancy": [
+        "7"
+      ],
+      "I_ticks": [
+        "1"
+      ],
+      "I_encoding": [
+        "base2"
+      ],
+      "R_mode": [],
+      "R_n_nodes": [
+        "2048"
+      ],
+      "R_k_avg": [],
+      "R_self_loops": [],
+      "R_init": []
+    },
+    "derived_filter_filters": {
+      "j": []
+    },
+    "color_offsets": {
+      "D_mode:displacement [T_loss]": {
+        "h": 6
+      },
+      "D_mode:displacement [T_accuracy]": {
+        "h": 1
+      },
+      "D_mode:velocity [T_loss]": {
+        "h": 5
+      },
+      "D_mode:velocity [T_accuracy]": {
+        "h": 5
+      }
+    },
+    "viewport": null,
+    "trace_visibility": {
+      "D_mode:displacement [T_loss]|markers": true,
+      "D_mode:displacement [T_accuracy]|markers": true,
+      "D_mode:velocity [T_loss]|markers": true,
+      "D_mode:velocity [T_accuracy]|markers": true
+    }
+  }
+}

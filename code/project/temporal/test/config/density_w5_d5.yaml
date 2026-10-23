@@ -1,0 +1,66 @@
+# Test fixture: a one-channel temporal grid (density, window 5, delay 5), the reference design and its axes.
+# test_readout_heads.py and test_washout.py build their temporal params from it. Copied from a furu probe so
+# the library's tests don't depend on any paper's configs.
+logging:
+  out_path: out/test/temporal/density_w5_d5
+  save_keys: null
+  grid_search:
+    n_samples: 12
+    run: [train]
+model:
+  wiring:
+  - type: pattern
+    source: B
+    target: I
+    pattern: identity
+  - type: pattern
+    source: I
+    target: R
+    pattern: identity          # one-to-one: each input node feeds its own reservoir node, no clash
+  - type: gnm
+    source: R
+    target: R
+    k_min: 0
+    k_avg: R_k_avg
+    k_max: 25
+    self_loops: 0.0
+    mode: R_mode
+  input_layer:
+    perturbation: override
+    encoding: base2
+    features: 1
+    resolution: 1
+    redundancy: [1, 4, 16, 64, 256, 512]
+    ticks: '1'
+  output_layer:
+    n_nodes: 1
+    heads: [time-series, classification]   # both readouts fitted on one reservoir run
+  reservoir_layer:
+    init: random
+    n_nodes: 512
+    reset: true
+  training:
+    epochs: 1
+    evaluation: dev
+    optim:
+      name: bernoulli
+      params:
+        alpha: 1.0e-6          # Bernoulli GLM (logit link), Newton-IRLS: smallest well-posed alpha
+  variables:
+    R_k_avg: [1.0, 2.0, 3.0, 4.0, 6.0, 8.0]
+    R_mode: heterogeneous
+dataset:
+  name: temporal
+  task: density
+  dimensions: 1
+  bits: 15
+  window: 5
+  delay: 5
+  split:
+    train: 0.5
+    dev: 0.3
+    test: 0.2
+  samples: 32768
+  sampling_mode: exhaustive    # every 15-bit stream once: dev and test streams are never seen in training
+  shuffle: true
+  seed: 0                      # the same seed in every head config: the same streams, so the heads are paired

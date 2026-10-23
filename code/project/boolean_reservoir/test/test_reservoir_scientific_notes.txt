@@ -1,0 +1,135 @@
+Peer Review Notes — BooleanReservoir (RBN-based Reservoir Computing)
+======================================================================
+Generated: 2026-04-16
+Tests: test_reservoir_scientific.py (25/25 passing)
+
+----------------------------------------------------------------------
+CRITICAL — must address before submission
+----------------------------------------------------------------------
+
+[1] Criticality regime is implicit (test: test_kauffman_criticality_parameter)
+
+    The Kauffman order parameter is lambda = 2*p*(1-p).
+    Phase boundary: lambda * k_avg = 1.
+
+    Default params (k_avg=2.0, p=0.5) hit this exactly (0.5 * 2 = 1.0). OK.
+    But grid searches over k_avg do NOT co-vary p to maintain criticality.
+    Example: k_avg=3.0, p=0.5  =>  lambda * k_avg = 1.5  (chaotic regime).
+             To target criticality at k=3: p = 1/(2*k) = 0.167 (or 0.833).
+
+    Recommendation: in the methods section, state the intended regime per
+    experiment. If sweeping k_avg, either co-vary p or explicitly report the
+    resulting lambda*k_avg as a separate axis. The regression test
+    test_kauffman_criticality_parameter guards the default config.
+
+[2] Warmup duration is tied to ticks[0], not reservoir size
+    (reservoir.py:warmup, called from reset_reservoir)
+
+    Default warmup = ticks[0], which is typically 1 for most configs.
+    One tick is almost certainly insufficient to wash out the initial
+    transient; expected washout is O(log N) for critical RBNs.
+    For N=256 this is ~8 ticks.
+
+    Impact: if init='random-warmup' the stored backup state reflects
+    only 1-tick evolution — this does not qualify as a settled attractor.
+    With init='random' + reset=True the issue is masked (each forward
+    call starts from the same 1-tick-post-warmup state reproducibly),
+    but the "warmup" label in the paper implies a proper washout.
+
+    Recommendation: add a standalone `warmup_ticks` parameter with a
+    sensible default (e.g. max(8, int(log2(n_nodes)))). Separate it
+    from the per-chunk ticks parameter.
+
+----------------------------------------------------------------------
+MODERATE — should address
+----------------------------------------------------------------------
+
+[3] Heterogeneous-degree LUT: memory vs speed trade-off (by design)
+
+    LUT shape: n_nodes x 2^k_max.
+    A node with actual in-degree k < k_max only ever accesses 2^k
+    non-contiguous entries (at stride 2^(k_max - k), MSB-first bin2int).
+    Those entries are still i.i.d. Bernoulli(p) — mathematically valid.
+
+    Memory overhead: up to 2^(k_max - k_avg) x per node.
+    Example: k_avg=3, k_max=6  =>  8x unused LUT slots per low-degree node.
+
+    The dev has confirmed this is intentional: speed over memory.
+    No code change needed. However, the paper MUST document this:
+      "Each node carries a 2^k_max-entry LUT. For heterogeneous graphs
+       only 2^k entries (k = actual in-degree) are accessed; the
+       remainder is allocated for SIMD-friendly uniform indexing."
+    A reviewer will ask why the LUT is 2^k_max instead of 2^k_actual.
+    One sentence in the methods section is sufficient.
+
+    Test test_heterogeneous_lut_access_pattern verifies the exact
+    stride pattern (accessed indices = {0, stride, 2*stride, ...}).
+
+[4] Input nodes are forcing nodes — I->R one-directional coupling
+    (tests: test_input_nodes_have_no_incoming_reservoir_edges,
+            test_input_nodes_preserved_during_tick)
+
+    w_ri = zeros, w_ii = zeros => input nodes have zero in-degree.
+    The reservoir cannot write back to them. After perturbation, I-nodes
+    act as persistent registers broadcasting to R-nodes with no feedback.
+
+    This differs from classical ESN designs (full recurrent state).
+    A reviewer will ask whether R->I feedback was ablated and whether
+    it would help. Either run the ablation or add one justification
+    sentence (e.g. "feedback to input nodes would corrupt the encoded
+    input signal before all chunks are injected").
+
+----------------------------------------------------------------------
+MINOR — documentation only
+----------------------------------------------------------------------
+
+[5] spectral_radius in KQGRMetrics is a LINEAR measure on a Boolean net
+
+    graph.py:calc_spectral_radius computes the dominant eigenvalue of
+    the unweighted {0,1} adjacency matrix. For ESNs, rho < 1 guarantees
+    echo-state property. For Boolean networks the equivalent is the
+    annealed approximation (lambda * k_avg, see [1] above).
+
+    Stored value is a useful graph-structural descriptor but should NOT
+    be interpreted as an echo-state stability indicator in the manuscript.
+    Label it "graph spectral radius" and cite the annealed approximation
+    separately.
+
+[6] Isolated-node LUT rows are allocated but never used
+    (reservoir.py:_reservoir_tick lines 363-364)
+
+    Nodes in no_neighbours_indices have their state preserved by a
+    special-case override. Their 2^k_max LUT rows are allocated but
+    never read. Harmless correctness-wise; noted for completeness.
+    No action required given the speed-over-memory preference.
+
+----------------------------------------------------------------------
+CONFIRMED CORRECT — no action needed
+----------------------------------------------------------------------
+
+- Synchronous (parallel) update: all states read at t, written at t+1.
+  No intra-tick read-after-write side effects. (test_synchronous_update)
+
+- Seed determinism: NumPy RNG for graph/LUT/init ensures CPU==GPU
+  given the same seed. torch.rand is never used for reservoir structure.
+  (test_determinism_same_seed)
+
+- Batch independence: batched forward == m independent single-sample
+  passes. (test_batch_independence)
+
+- LUT bias: mean LUT output matches p to within 0.05 for both p=0.5
+  and p=0.2. (test_lut_bias_p05, test_lut_bias_p02)
+
+- Gradient isolation: reservoir buffers carry no gradients; only
+  readout.weight and readout.bias accumulate grad.
+  (test_gradient_isolation)
+
+- Readout sees only R nodes (complement of input_nodes_mask), preventing
+  the linear layer from short-circuiting the reservoir.
+  (test_readout_uses_only_r_nodes)
+
+- reset=True reproducibility: same input after state pollution gives
+  identical output. (test_reset_true_between_samples)
+
+- bin2int is MSB-first with correct powers-of-2 vector.
+  (test_bin2int_*)
